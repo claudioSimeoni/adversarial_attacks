@@ -85,27 +85,27 @@ def evaluate(model, test_loader):
 
 batch_sizes = [32]
 lrs = [0.001]
-cazzo = None
+model = None
 
 for i in batch_sizes:
     for j in lrs:
         torch.manual_seed(42)
         epochs = 5  
-        cazzo = MLP().to(device)
+        model = MLP().to(device)
 
         loss_fn = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(cazzo.parameters(), j)
+        optimizer = torch.optim.Adam(model.parameters(), j)
 
         loader = DataLoader(train_data, batch_size=i, shuffle=True)
         test_loader = DataLoader(test_data, batch_size=i, shuffle=False)
 
-        loss_list = train(cazzo, loss_fn, optimizer, loader, epochs)
+        loss_list = train(model, loss_fn, optimizer, loader, epochs)
         ax.plot([i for i in range(1, epochs + 1)], loss_list, label=f"batch size = {i}, lr = {j}")
 
-        succ_rate = evaluate(cazzo, test_loader)
+        succ_rate = evaluate(model, test_loader)
         print(f"Batch size = {i}, Learning rate = {j}, Success rate = {succ_rate}%")
 
-torch.save(cazzo.state_dict(), "cazzo.pth")
+torch.save(model.state_dict(), "model.pth")
 
 
 ax.set_xlabel("Epochs")
