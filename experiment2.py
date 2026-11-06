@@ -58,7 +58,7 @@ for eind, epsilon in enumerate(eps_vars):
     correct_pred = 0
     for i in range(t):
         idx = torch.randint(len(test_data), size=(1,)).item()
-        img, label = train_data[idx]
+        img, label = test_data[idx]
         img = img.to(device)
         img.requires_grad = True
 
