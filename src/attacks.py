@@ -1,11 +1,4 @@
 import torch
-from torch import nn 
-from torchvision import datasets
-from torchvision.transforms import v2
-from torch.utils.data import DataLoader
-
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 class Attack:
@@ -26,14 +19,14 @@ class FSGM(Attack):
         img.requires_grad = True
 
         logits = model(img)
-        label = torch.tensor([label], device=device)
+        label = label.to(device)
         loss = loss_fn(logits, label)
 
         img_grad = torch.autograd.grad(loss, img)[0]
         new_img = (img + torch.sign(img_grad) * self.epsilon).clamp(0, 1).detach()
 
         adv_logits = model(new_img)
-        pred_class = torch.argmax(logits)
-        pred_adv = torch.argmax(adv_logits)
-        return pred_class, pred_adv
+        pred_classes = torch.argmax(logits, dim=1)
+        pred_adv_classes = torch.argmax(adv_logits, dim=1)
+        return pred_classes, pred_adv_classes
 
