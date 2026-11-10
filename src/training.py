@@ -8,25 +8,41 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def train(model : nn.Module, loss_fn, optimizer, loader, epochs):
+def train(model : nn.Module, loss_fn : nn.Module, opt : torch.optim.Optimizer, 
+          train_loader : DataLoader, val_loader : DataLoader, epochs : int) -> list[float]:
+
     device = next(model.parameters()).device
-    model.train()
-    loss_list = []
+    for ep in range(1, epochs + 1):
+        # training 
+        model.train()
+        for x, y in train_loader:
+            x, y = x.to(device), y.to(device)
 
-    for _ in range(epochs):
-        epoch_loss = 0
-
-        for X, y in loader:
-            X = X.to(device)
-            y = y.to(device)
-            # single batch
-            optimizer.zero_grad()
-            logits = model(X)
+            opt.zero_grad()
+            logits = model(x)
             loss = loss_fn(logits, y)
-            epoch_loss += loss.item()
             loss.backward()
-            optimizer.step()
+            opt.step()
 
-        loss_list.append(epoch_loss / len(loader))
+        # validation
+        model.eval()
+        epoch_loss, corr = 0, 0
+        total = 0
+        test_losses = []
+        test_acc = []
+        
+        with torch.no_grad():
+            for x, y in val_loader:
+                x, y = x.to(device), y.to(device)
+                logits = model(x)
+                epoch_loss += loss_fn(logits, y).item()
+                pred = logits.argmax(dim=1)
+                corr += (pred == y).sum().item()
+                total += y.numel()
+            
+        test_losses.append(epoch_loss / len(val_loader))
+        test_acc.append(corr / total)
 
-    return loss_list
+        print(f"Epoch {ep}: Avg Loss = {epoch_loss / len(val_loader)} | Accuracy = {corr / total}")
+
+    return test_losses, test_acc
