@@ -8,18 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-x = [1, 2, 3]
+x = torch.tensor([1, 2, 3])
+
+print(1 / x)
 
 
-def prix(l):
-    l[0] = 0
-
-
-prix(x)
-print(x)
-
-x = np.array([1, 2, 3])
-y = np.array([1, 2, 3])
-
-z = np.concatenate(x[:, None], y[None, :])
-print(z)

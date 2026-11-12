@@ -11,7 +11,7 @@ from sklearn import datasets
 
 from src.attacks import FSGM, IFSGM, PGD
 from src.evaluation import evaluate, evaluate_l2_lipshitz
-from src.models import MLP, LipshitzLayer, GroupSort
+from src.models import MLP, LipshitzLayerSN, LipshitzLayerAOL, GroupSort
 from src.utils import load_models
 
 
@@ -51,7 +51,7 @@ def show_lipshitz_constraints(model: MLP, pts, ax, L):
 
 # loading models
 model = MLP([2, 64, 64, 2], nn.Linear, nn.ReLU)
-lipshitz_model = MLP([2, 64, 64, 2], LipshitzLayer, GroupSort)
+lipshitz_model = MLP([2, 64, 64, 2], LipshitzLayerSN, GroupSort)
 load_models([model, lipshitz_model], ["mlp_moon.pth", "lipshitz_mlp_moon.pth"], device)
 
 # preparing the ds

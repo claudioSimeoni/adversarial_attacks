@@ -18,37 +18,38 @@ def train(
 ) -> list[float]:
 
     device = next(model.parameters()).device
+    train_loss = 0
     for ep in range(1, epochs + 1):
         # training
         model.train()
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
-
             opt.zero_grad()
             logits = model(x)
             loss = loss_fn(logits, y)
+            train_loss += loss.item()
             loss.backward()
             opt.step()
 
         # validation
         model.eval()
-        epoch_loss, corr = 0, 0
+        val_loss, corr = 0, 0
         total = 0
-        test_losses = []
-        test_acc = []
+        val_losses = []
+        val_acc = []
 
         with torch.no_grad():
             for x, y in val_loader:
                 x, y = x.to(device), y.to(device)
                 logits = model(x)
-                epoch_loss += loss_fn(logits, y).item()
+                val_loss += loss_fn(logits, y).item()
                 pred = logits.argmax(dim=1)
                 corr += (pred == y).sum().item()
                 total += y.numel()
 
-        test_losses.append(epoch_loss / len(val_loader))
-        test_acc.append(corr / total)
+        val_losses.append(val_loss / len(val_loader))
+        val_acc.append(corr / total)
 
-        print(f"Epoch {ep}: Avg Loss = {epoch_loss / len(val_loader)} | Accuracy = {corr / total}")
+        print(f"Epoch {ep}: Avg Training Loss = {train_loss / len(val_loader)} | Avg Validation Loss = {val_loss / len(val_loader)} | Accuracy = {corr / total}")
 
-    return test_losses, test_acc
+    return val_losses, val_acc

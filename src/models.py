@@ -1,15 +1,32 @@
 from torch import nn
 from torch.nn.utils import spectral_norm
+import torch.nn.functional as F
 import torch
 
 
-class LipshitzLayer(nn.Module):
+class LipshitzLayerSN(nn.Module):
     def __init__(self, input, output):
         super().__init__()
         self.layer = spectral_norm(nn.Linear(input, output))
 
     def forward(self, x):
         return self.layer(x)
+
+
+class LipshitzLayerAOL(nn.Module):
+    def __init__(self, input, output):
+        super().__init__()
+        self.P = nn.Parameter(torch.zeros(output, input))
+        self.bias = nn.Parameter(torch.zeros(output))
+        nn.init.orthogonal_(self.P)
+
+    def forward(self, x):
+        G = self.P.T @ self.P
+        part = G.abs().sum(dim=0)
+        d = 1 / torch.sqrt(part)
+        W = self.P * d
+
+        return F.linear(x, W, self.bias)
 
 
 class GroupSort(nn.Module):
