@@ -28,4 +28,12 @@ test_data = datasets.FashionMNIST(
 )
 
 test_loader = DataLoader(test_data, batch_size=100, shuffle=True)
-evaluate(model, [FSGM(0.05), IFSGM(0.05, 10), PGD(0.05, 10)], test_loader)
+evaluate(
+    model,
+    [
+        FSGM(0.05, bounds=(0, 1)),
+        IFSGM(0.05, 10, bounds=(0, 1)),
+        PGD(0.05, 10, bounds=(0, 1)),
+    ],
+    test_loader,
+)

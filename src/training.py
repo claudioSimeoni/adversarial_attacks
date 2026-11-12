@@ -8,12 +8,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def train(model : nn.Module, loss_fn : nn.Module, opt : torch.optim.Optimizer, 
-          train_loader : DataLoader, val_loader : DataLoader, epochs : int) -> list[float]:
+def train(
+    model: nn.Module,
+    loss_fn: nn.Module,
+    opt: torch.optim.Optimizer,
+    train_loader: DataLoader,
+    val_loader: DataLoader,
+    epochs: int,
+) -> list[float]:
 
     device = next(model.parameters()).device
     for ep in range(1, epochs + 1):
-        # training 
+        # training
         model.train()
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
@@ -30,7 +36,7 @@ def train(model : nn.Module, loss_fn : nn.Module, opt : torch.optim.Optimizer,
         total = 0
         test_losses = []
         test_acc = []
-        
+
         with torch.no_grad():
             for x, y in val_loader:
                 x, y = x.to(device), y.to(device)
@@ -39,7 +45,7 @@ def train(model : nn.Module, loss_fn : nn.Module, opt : torch.optim.Optimizer,
                 pred = logits.argmax(dim=1)
                 corr += (pred == y).sum().item()
                 total += y.numel()
-            
+
         test_losses.append(epoch_loss / len(val_loader))
         test_acc.append(corr / total)
 

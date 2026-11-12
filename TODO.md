@@ -1,0 +1,2 @@
+- Add model.eval() and model.train() where it is not done yet
+- Check overfitting? 

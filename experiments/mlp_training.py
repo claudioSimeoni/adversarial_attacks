@@ -34,7 +34,7 @@ test_loader = DataLoader(test_data, batch_size=64, shuffle=False)
 
 model = MLP([784, 128, 10], nn.Linear, nn.ReLU)
 model.to(device)
-opt = torch.optim.Adam(model.parameters(), lr = 0.01)
+opt = torch.optim.Adam(model.parameters(), lr=0.01)
 epochs = 1
 train(model, nn.CrossEntropyLoss(), opt, train_loader, test_loader, epochs)
 

@@ -1,14 +1,27 @@
 from torch import nn
 from torch.nn.utils import spectral_norm
+import torch
 
 
 class LipshitzLayer(nn.Module):
     def __init__(self, input, output):
         super().__init__()
-        self.layer = nn.Linear(input, output)
+        self.layer = spectral_norm(nn.Linear(input, output))
 
-    def forward(self, X):
-        return self.layer(X) / spectral_norm(self.layer)
+    def forward(self, x):
+        return self.layer(x)
+
+
+class GroupSort(nn.Module):
+    def __init__(self, group_size=2):
+        super().__init__()
+        self.group_size = group_size
+
+    def forward(self, x: torch.Tensor):
+        shape = x.shape
+        x = x.reshape(shape[0], x[0].numel() // self.group_size, self.group_size)
+        x = x.sort(dim=2).values
+        return x.reshape(shape)
 
 
 class MLP(nn.Module):
