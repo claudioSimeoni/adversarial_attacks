@@ -38,4 +38,4 @@ opt = torch.optim.Adam(model.parameters(), lr=0.01)
 epochs = 1
 train(model, nn.CrossEntropyLoss(), opt, train_loader, test_loader, epochs)
 
-torch.save(model.state_dict(), "trained_models/mlp.pth")
+torch.save(model.state_dict(), "trained_models/exp1_mlp.pth")

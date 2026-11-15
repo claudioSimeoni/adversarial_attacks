@@ -17,3 +17,10 @@ The project is still in an embryonic version and there are so many things to cha
 - Use a standard way to name trained models and maybe split experiments into training and evaluation?
 - Add some testing? 
 - Maybe use some AI tool to detect tricky bugs which didn't arise until now / to find out if there are possible optimization / more ideomatic way of writing the code 
+- Keeping only modules used
+- Maybe add hyperparameters tuning?
+
+#### TODAY TODO LIST
+- change the evaluate
+- clean up experiments
+- build new experiments with new architectures

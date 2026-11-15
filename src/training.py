@@ -18,10 +18,10 @@ def train(
 ) -> list[float]:
 
     device = next(model.parameters()).device
-    train_loss = 0
     for ep in range(1, epochs + 1):
         # training
         model.train()
+        train_loss = 0
         for x, y in train_loader:
             x, y = x.to(device), y.to(device)
             opt.zero_grad()

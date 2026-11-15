@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch
 
 
-class LipshitzLayerSN(nn.Module):
+class SNLinear(nn.Module):
     def __init__(self, input, output):
         super().__init__()
         self.layer = spectral_norm(nn.Linear(input, output))
@@ -13,7 +13,7 @@ class LipshitzLayerSN(nn.Module):
         return self.layer(x)
 
 
-class LipshitzLayerAOL(nn.Module):
+class AOLLinear(nn.Module):
     def __init__(self, input, output):
         super().__init__()
         self.P = nn.Parameter(torch.zeros(output, input))
@@ -42,8 +42,9 @@ class GroupSort(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, layer_sizes, layer_type, activation):
+    def __init__(self, layer_sizes, layer_type, activation, name=None):
         super().__init__()
+        self.name = name
 
         layers = []
         for i in range(len(layer_sizes) - 2):

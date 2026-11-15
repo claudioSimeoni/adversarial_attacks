@@ -15,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 model = MLP([784, 128, 10], nn.Linear, nn.ReLU)
-state = torch.load("trained_models/model.pth", map_location=device, weights_only=True)
+state = torch.load("trained_models/exp1_mlp.pth", map_location=device, weights_only=True)
 model.load_state_dict(state)
 model.to(device)
 model.eval()

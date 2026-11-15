@@ -11,18 +11,19 @@ class Attack:
 
 
 class FSGM(Attack):
-    def __init__(self, epsilon, bounds=(None, None)):
+    def __init__(self, epsilon, loss_fn, bounds=(None, None)):
         self.epsilon = epsilon
+        self.loss_fn = loss_fn
         self.bounds = bounds
 
-    def attack(self, model, loss_fn, img, label):
+    def attack(self, model, img, label):
         device = next(model.parameters()).device
         label = label.to(device)
         img = img.to(device)
         img.requires_grad = True
 
         logits = model(img)
-        loss = loss_fn(logits, label)
+        loss = self.loss_fn(logits, label)
 
         img_grad = torch.autograd.grad(loss, img)[0]
         img = (img + torch.sign(img_grad) * self.epsilon).detach()
@@ -34,14 +35,15 @@ class FSGM(Attack):
 
 
 class PGD(Attack):
-    def __init__(self, epsilon, steps, bounds=(None, None), norm=None):
+    def __init__(self, epsilon, loss_fn, steps, bounds=(None, None), norm=None):
         self.epsilon = epsilon
+        self.loss_fn = loss_fn
         self.steps = steps
         self.alpha = 2 * epsilon / steps
         self.bounds = bounds
         self.norm = norm
 
-    def attack(self, model, loss_fn, img, label):
+    def attack(self, model, img, label):
         device = next(model.parameters()).device
         label = label.to(device)
         img = img.to(device)
@@ -54,7 +56,7 @@ class PGD(Attack):
             img.requires_grad = True
 
             logits = model(img)
-            loss = loss_fn(logits, label)
+            loss = self.loss_fn(logits, label)
             img_grad = torch.autograd.grad(loss, img)[0]
 
             img_adv = img + torch.sign(img_grad) * self.alpha
@@ -74,13 +76,14 @@ class PGD(Attack):
 
 
 class IFSGM(Attack):
-    def __init__(self, epsilon, steps, bounds=(None, None)):
+    def __init__(self, epsilon, loss_fn, steps, bounds=(None, None)):
         self.epsilon = epsilon
+        self.loss_fn = loss_fn
         self.steps = steps
         self.alpha = epsilon / steps
         self.bounds = bounds
 
-    def attack(self, model, loss_fn, img, label):
+    def attack(self, model, img, label):
         device = next(model.parameters()).device
         label = label.to(device)
         img = img.to(device)
@@ -90,7 +93,7 @@ class IFSGM(Attack):
             img.requires_grad = True
 
             logits = model(img)
-            loss = loss_fn(logits, label)
+            loss = self.loss_fn(logits, label)
             img_grad = torch.autograd.grad(loss, img)[0]
 
             img_adv = img + torch.sign(img_grad) * self.alpha

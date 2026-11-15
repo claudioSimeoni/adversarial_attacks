@@ -1,4 +1,6 @@
 import torch
+from dataclasses import dataclass
+from torch.utils.data import DataLoader, Dataset
 
 
 def load_models(models, names, device):
