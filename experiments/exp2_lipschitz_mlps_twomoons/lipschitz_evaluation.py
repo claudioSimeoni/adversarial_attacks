@@ -11,8 +11,10 @@ from sklearn import datasets
 
 from src.attacks import FSGM, IFSGM, PGD
 from src.evaluation import evaluate, certify_l2
-from src.models import MLP, SNLinear, AOLLinear, GroupSort
+from src.models import MLP, SNLinear, AOLLinear, CaleyLinear, GroupSort, HingeLoss
 from src.utils import load_models
+
+from functools import partial
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -59,28 +61,37 @@ test_loader = DataLoader(test_dataset, batch_size=64, shuffle=True)
 exp2_mlp = MLP([2, 64, 64, 2], nn.Linear, nn.ReLU, name=None)
 exp2_SN_mlp = MLP([2, 64, 64, 2], SNLinear, GroupSort, name="SN Linear")
 exp2_AOL_mlp = MLP([2, 64, 64, 2], AOLLinear, GroupSort, name="AOL Linear")
-load_models([exp2_mlp, exp2_SN_mlp, exp2_AOL_mlp], ["exp2_mlp.pth", "exp2_SN_mlp.pth", "exp2_AOL_mlp.pth"], device)
+exp2_Caley_mlp = MLP([2, 64, 64, 2], CaleyLinear, GroupSort, name="Caley Linear")
+
+load_models([exp2_mlp, exp2_SN_mlp, exp2_AOL_mlp, exp2_Caley_mlp], 
+            ["exp2_mlp.pth", "exp2_SN_mlp.pth", "exp2_AOL_mlp.pth", "exp2_Caley_mlp.pth"], device)
 
 # plotting
-fig, ax = plt.subplots(1, 3)
-show_boundary(exp2_mlp, -3, 4, ax[0])
-show_boundary(exp2_SN_mlp, -3, 4, ax[1])
-show_boundary(exp2_AOL_mlp, -3, 4, ax[2])
-show_lipshitz_constraints(exp2_SN_mlp, x.to(device), ax[1], 1)
-show_lipshitz_constraints(exp2_AOL_mlp, x.to(device), ax[2], 1)
-ax[0].scatter(x[:, 0], x[:, 1], color="black")
-ax[1].scatter(x[:, 0], x[:, 1], color="black")
-ax[2].scatter(x[:, 0], x[:, 1], color="black")
+fig, ax = plt.subplots(2, 3)
+show_boundary(exp2_mlp, -3, 4, ax[0, 0])
+show_boundary(exp2_SN_mlp, -3, 4, ax[0, 1])
+show_boundary(exp2_AOL_mlp, -3, 4, ax[0, 2])
+show_boundary(exp2_Caley_mlp, -3, 4, ax[1, 0])
+show_lipshitz_constraints(exp2_SN_mlp, x.to(device), ax[0, 1], 1)
+show_lipshitz_constraints(exp2_AOL_mlp, x.to(device), ax[0, 2], 1)
+show_lipshitz_constraints(exp2_Caley_mlp, x.to(device), ax[1, 0], 1)
+ax[0, 0].scatter(x[:, 0], x[:, 1], color="black")
+ax[0, 1].scatter(x[:, 0], x[:, 1], color="black")
+ax[0, 2].scatter(x[:, 0], x[:, 1], color="black")
+ax[1, 0].scatter(x[:, 0], x[:, 1], color="black")
 plt.show()
 
 # evaluation
 epsilon = 0.5
 steps = 20
 ce = nn.CrossEntropyLoss()
+hl = HingeLoss(1)
 
 evaluate(exp2_mlp, [FSGM(epsilon, ce), IFSGM(epsilon, ce, steps), PGD(epsilon, ce, steps)], test_loader)
 evaluate(exp2_SN_mlp, [FSGM(epsilon, ce), IFSGM(epsilon, ce, steps), PGD(epsilon, ce, steps)], test_loader)
 evaluate(exp2_AOL_mlp, [FSGM(epsilon, ce), IFSGM(epsilon, ce, steps), PGD(epsilon, ce, steps)], test_loader)
+evaluate(exp2_AOL_mlp, [FSGM(epsilon, hl), IFSGM(epsilon, hl, steps), PGD(epsilon, hl, steps)], test_loader)
+evaluate(exp2_Caley_mlp, [FSGM(epsilon, ce), IFSGM(epsilon, ce, steps), PGD(epsilon, ce, steps)], test_loader)
 certify_l2(exp2_AOL_mlp, epsilon, test_loader)
 
 

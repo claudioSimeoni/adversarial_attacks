@@ -10,6 +10,5 @@ import numpy as np
 
 x = torch.tensor([1, 2, 3])
 
-print(1 / x)
-
+print(torch.max(x, ))
 

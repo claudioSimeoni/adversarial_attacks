@@ -50,6 +50,7 @@ def train(
         val_losses.append(val_loss / len(val_loader))
         val_acc.append(corr / total)
 
-        print(f"Epoch {ep}: Avg Training Loss = {train_loss / len(val_loader)} | Avg Validation Loss = {val_loss / len(val_loader)} | Accuracy = {corr / total}")
+        print(f"Epoch {ep}: Avg Training Loss = {train_loss / len(val_loader):.2f} | "
+              f"Avg Validation Loss = {val_loss / len(val_loader):.2f} | Accuracy = {corr / total:.2%}")
 
     return val_losses, val_acc

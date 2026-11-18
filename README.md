@@ -21,6 +21,3 @@ The project is still in an embryonic version and there are so many things to cha
 - Maybe add hyperparameters tuning?
 
 #### TODAY TODO LIST
-- change the evaluate
-- clean up experiments
-- build new experiments with new architectures

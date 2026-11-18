@@ -44,7 +44,7 @@ def certify_l2(model: nn.Module, epsilon : float, loader: DataLoader):
         top2 = torch.topk(logits, k=2, dim=1).values
         radii = torch.abs(top2[:,0] - top2[:, 1]) / (np.sqrt(2) * 1)
         corr_pred = logits.argmax(dim=1) == y.to(device)
-        cert_total += (radii >= epsilon & corr_pred).sum().item()
+        cert_total += torch.logical_and(radii >= epsilon, corr_pred).sum().item()
         total += y.numel()
 
     print(f"Certified L2 Accuracy of {model_name}: {cert_total / total:.2%}")
