@@ -22,8 +22,7 @@ class AOLLinear(nn.Module):
 
     def forward(self, x):
         G = self.P.T @ self.P
-        part = G.abs().sum(dim=0)
-        d = 1 / torch.sqrt(part)
+        d = torch.rsqrt(G.abs().sum(dim=0).clamp_min(1e-12))
         W = self.P * d
 
         return F.linear(x, W, self.bias)
@@ -35,32 +34,25 @@ class CaleyLinear(nn.Module):
         self.P = nn.Parameter(torch.zeros(output, input))
         self.bias = nn.Parameter(torch.zeros(output))
         nn.init.orthogonal_(self.P)
-        self.vertical = output >= input
 
     def forward(self, x):
-        output, input = self.P.shape
         P = self.P
 
-        if(not self.vertical):
+        vertical = P.shape[0] > P.shape[1]
+        if(not vertical):
             P = P.T
-            output, input = input, output
-            
-        Y = P[:input, :]
-        Z = P[input:, :]
+
+        n = P.shape[1]
+        Y = P[:n, :]
+        Z = P[n:, :]
         M = Y - Y.T + (Z.T @ Z)
-        eye = torch.eye(input).to(x.device)
+        I = torch.eye(n, device=P.device, dtype=P.dtype)
 
-        caley = torch.zeros_like(P)
+        inv = (I + M).inverse()
+        caley = torch.cat((inv @ (I - M), 2 * Z @ inv), 0)
 
-        inv = (eye + M).inverse()
-        caley[:input, :] =  inv @ (eye - M)
-        caley[input:, :] = 2 * Z @ inv
-
-        if(not self.vertical):
+        if(not vertical):
             caley = caley.T
-            self.P = nn.Parameter(P.T)
-        else:
-            self.P = nn.Parameter(P)
 
         return F.linear(x, caley, self.bias)
 
@@ -83,12 +75,11 @@ class HingeLoss(nn.Module):
         self.margin = margin
 
     def forward(self, logits : torch.Tensor, label):
-        top2 = logits.topk(k=2, dim=1, sorted=True).values
-        col0 = torch.zeros_like(top2[:, 0])
-        colm = torch.ones_like(top2[:, 0]) * self.margin
-        loss = torch.max(col0, colm - (torch.abs(top2[:, 1] - top2[:, 0])))
-        return loss.mean()
+        corr_logits = logits.gather(1, label.unsqueeze(1)).squeeze(1)
+        remain_max = logits.scatter(1, label.unsqueeze(1), float("-inf"))
+        remain_max = remain_max.max(dim=1).values
 
+        return F.relu(self.margin - (corr_logits - remain_max)).mean()
 
 
 class MLP(nn.Module):
@@ -109,20 +100,38 @@ class MLP(nn.Module):
 
 
 class CNN(nn.Module):
-    def __init__(self, num_classes):
+    def __init__(self, num_classes, conv, activation, linear, name=None):
         super().__init__()
+        self.name = name
         self.model = nn.Sequential(
-            nn.Conv2d(1, 64, 3, padding=1),
-            nn.ReLU(),
+            conv(1, 64, 3, padding=1),
+            activation(),
             nn.MaxPool2d(2),
-            nn.Conv2d(64, 64, 3, padding=1),
-            nn.ReLU(),
+            conv(64, 64, 3, padding=1),
+            activation(),
             nn.MaxPool2d(2),
             nn.Flatten(),
-            nn.Linear(64 * 7 * 7, 128),
-            nn.ReLU(),
-            nn.Linear(128, num_classes)
+            linear(64 * 7 * 7, 128),
+            activation(),
+            linear(128, num_classes)
         )
 
     def forward(self, x):
         return self.model(x)
+
+
+class AOLConv2d(nn.Conv2d):
+    def constraint(self, P : torch.Tensor):
+        K = P.permute(1, 0, 2, 3)
+
+        d = F.conv2d(K, K, padding=(P.shape[2] - 1, P.shape[3] - 1))
+        d = d.abs().sum(dim=(0, 2, 3))
+        d = d.clamp_min(1e-12).rsqrt()
+
+        return P * d[None, :, None, None]
+
+    def forward(self, x):
+        W = self.constraint(self.weight)
+        return F.conv2d(x, W, self.bias, self.stride, self.padding, self.dilation, self.groups)
+
+# out in k0 k1

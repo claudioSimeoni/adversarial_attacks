@@ -8,7 +8,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-x = torch.tensor([1, 2, 3])
+x = torch.tensor([[1, 2, 3], [3, 4, 5]])
+y = x.T
+z = x
+k = x[:, [0, 2]]
+z[0, 0] = 3
+y[0, 1] = 17
+prixx = [1, 3, 4]
+brux = prixx
 
-print(torch.max(x, ))
+k[0, 0] = 1234123
+
+print(y, x.T, k)
 
